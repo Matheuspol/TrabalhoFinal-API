@@ -1,0 +1,94 @@
+services:
+  mongo:
+    image: mongo:7.0-jammy
+    container_name: tarefas-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: tarefas-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  todo-api-1:
+    build: ./todo-api
+    container_name: tarefas-api-1
+    environment:
+      PORT: 3000
+      INSTANCE_NAME: todo-api-1
+      MONGO_URL: mongodb://mongo:27017/tarefas
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3001:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  todo-api-2:
+    build: ./todo-api
+    container_name: tarefas-api-2
+    environment:
+      PORT: 3000
+      INSTANCE_NAME: todo-api-2
+      MONGO_URL: mongodb://mongo:27017/tarefas
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    ports:
+      - "3002:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  gateway:
+    build: ./gateway
+    container_name: tarefas-gateway
+    environment:
+      GATEWAY_PORT: 8080
+      TODO_API_TARGETS: http://todo-api-1:3000,http://todo-api-2:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - todo-api-1
+      - todo-api-2
+
+  worker-notificacoes:
+    build: ./worker-notificacoes
+    container_name: tarefas-worker-notificacoes
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  worker-auditoria:
+    build: ./worker-auditoria
+    container_name: tarefas-worker-auditoria
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  mongo_data:

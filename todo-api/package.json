@@ -1,0 +1,19 @@
+{
+  "name": "todo-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "API de tarefas com persistência em MongoDB e publicação de eventos no RabbitMQ",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.9",
+    "express": "^5.1.0",
+    "mongoose": "^8.9.5"
+  }
+}

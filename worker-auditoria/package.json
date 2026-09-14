@@ -1,0 +1,17 @@
+{
+  "name": "worker-auditoria",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Consumer RabbitMQ que registra um log de auditoria de todos os eventos de tarefas",
+  "main": "src/consumer.js",
+  "scripts": {
+    "start": "node src/consumer.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.9"
+  }
+}
