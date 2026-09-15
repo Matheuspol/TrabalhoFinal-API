@@ -1,0 +1,41 @@
+TERMINAL 1 
+
+cd C:\Projetos\trabalho-apis-tarefas
+
+docker compose up --build
+
+
+TERMINAL 2 — comandos de teste
+
+cd C:\Projetos\CLAUDE\trabalho-apis-tarefas
+
+
+Criar:
+curl.exe -s -X POST http://localhost:8080/api/tarefas -H "Content-Type: application/json" -H "X-Client-Id: demo" -d "{\"titulo\":\"Etudar para a Prova\",\"descricao\":\"Revisar MongoDB\"}"
+
+
+Listar tudo:
+curl.exe -s http://localhost:8080/api/tarefas -H "X-Client-Id: demo"
+
+
+Listar por ID:
+curl.exe -s http://localhost:8080/api/tarefas/ID_AQUI -H "X-Client-Id: demo"
+
+
+Concluir (status):
+curl.exe -s -X PUT http://localhost:8080/api/tarefas/ID_AQUI -H "Content-Type: application/json" -H "X-Client-Id: demo" -d "{\"concluida\":true}"
+
+
+Deletar:
+curl.exe -s -X DELETE http://localhost:8080/api/tarefas/ID_AQUI -H "X-Client-Id: demo"
+
+
+Load balancing (lb1 e lb2 só por organização é cosmético — não influencia o resultado):
+curl.exe -s -D - -o NUL -H "X-Client-Id: lb1" http://localhost:8080/api/tarefas | findstr X-Upstream-Instance
+
+curl.exe -s -D - -o NUL -H "X-Client-Id: lb2" http://localhost:8080/api/tarefas | findstr X-Upstream-Instance
+
+
+Rate Limit (5 primeiras dão 200, a 6ª dá 429):
+for /L %i in (1,1,6) do curl.exe -s -o NUL -w "%{http_code}\n" -H "X-Client-Id: rl-demo" http://localhost:8080/api/tarefas
+
